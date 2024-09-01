@@ -1,4 +1,4 @@
-import type {
+import {
   Message,
   CollectorFilter,
   TextChannel,
@@ -8,9 +8,10 @@ import type {
   Client,
   ThreadChannel,
   CommandInteraction,
+  ButtonStyle,
 } from 'discord.js';
-import { MessageButton } from 'discord.js';
-import { MessageActionRow } from 'discord.js';
+import { ButtonBuilder, MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder } from 'discord.js';
 import { filter } from 'domyno';
 
 import type { CommandDataWithHandler } from '../../../types';
@@ -236,15 +237,15 @@ const createJobPost = async (
         }).embed,
       ],
       components: [
-        new MessageActionRow().addComponents(
-          new MessageButton()
+        new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+          new ButtonBuilder()
             .setCustomId(`job🤔${userID}🤔response`)
-            .setStyle('PRIMARY')
+            .setStyle(ButtonStyle.Primary)
             .setLabel('DM me the posting')
             .setEmoji('✉️'),
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId(`job🤔${userID}🤔delete`)
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setLabel('Delete my post (poster only)')
             .setEmoji('🗑')
         ),
@@ -396,9 +397,9 @@ export const jobPostCommand: CommandDataWithHandler = {
             interaction.editReply({
               content: 'Please check your dms',
               components: [
-                new MessageActionRow().addComponents(
-                  new MessageButton()
-                    .setStyle('LINK')
+                new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+                  new ButtonBuilder()
+                    .setStyle(ButtonStyle.Link)
                     .setURL(`https://discord.com/channels/@me/${dmChannel.id}`)
                     .setLabel('Go to DMs')
                 ),

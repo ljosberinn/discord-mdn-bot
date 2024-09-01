@@ -1,4 +1,4 @@
-import type { GuildMember, Interaction, Message } from 'discord.js';
+import { ActionRowBuilder, ComponentType, MessageActionRowComponentBuilder, type GuildMember, type Interaction, type Message, StringSelectMenuBuilder } from 'discord.js';
 
 import { UserState } from '../db/user_state.js';
 import { continueOnboarding } from '../utils/continueOnboarding.js';
@@ -6,7 +6,7 @@ import { continueOnboarding } from '../utils/continueOnboarding.js';
 export const handleRoleSelected = async (
   interaction: Interaction
 ): Promise<void> => {
-  if (!interaction.isSelectMenu() && !interaction.isButton()) {
+  if (!interaction.isStringSelectMenu() && !interaction.isButton()) {
     return;
   }
 
@@ -40,9 +40,20 @@ export const handleRoleSelected = async (
   });
 
   await msg.edit({
-    components: msg.components.map(x => {
-      x.components[0].disabled = true;
-      return x;
+    components: msg.components.map(component => {
+      if (component.type === ComponentType.ActionRow) {
+        return new ActionRowBuilder<MessageActionRowComponentBuilder>(component)
+          .setComponents(
+            component.components.map(subComponent => {
+              if (subComponent.type === ComponentType.StringSelect) {
+                return new StringSelectMenuBuilder(subComponent).setDisabled(true)
+              }
+              // This feels wrong, there really should be a better way to edit a component...surely
+              return subComponent as unknown as MessageActionRowComponentBuilder
+            })
+          )
+      }
+      return component;
     }),
   });
 

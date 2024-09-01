@@ -1,13 +1,13 @@
-import type {
+import {
   ApplicationCommandOptionChoiceData,
+  ApplicationCommandOptionType,
   Client,
   CommandInteraction,
 } from 'discord.js';
 
-import { ApplicationCommandOptionType } from '../../../enums.js';
-import type { CommandDataWithHandler } from '../../../types';
+import { CommandDataWithHandler } from '../../../types';
 import { map } from '../../utils/map.js';
-import type { ValueOrNullary } from '../../utils/valueOrCall.js';
+import { ValueOrNullary } from '../../utils/valueOrCall.js';
 import { valueOrCall } from '../../utils/valueOrCall.js';
 import { javascript } from './handlers/javascript.js';
 
@@ -16,7 +16,7 @@ const resourceMessages = new Map<string, ValueOrNullary<{ content: string }>>([
 ]);
 
 const mapTransformToChoices = map(
-  (item: string): ApplicationCommandOptionChoiceData => ({
+  (item: string): ApplicationCommandOptionChoiceData<string> => ({
     name: item,
     value: item,
   })
@@ -25,7 +25,7 @@ const mapTransformToChoices = map(
 export const resourceInteraction: CommandDataWithHandler = {
   description: 'Quick response for asking someone to please use something',
   handler: async (client: Client, interaction: CommandInteraction) => {
-    const content = resourceMessages.get(interaction.options.getString('for'));
+    const content = resourceMessages.get(interaction.options.get('for').value as string);
 
     if (content) {
       interaction.reply(valueOrCall(content));
@@ -38,7 +38,7 @@ export const resourceInteraction: CommandDataWithHandler = {
       description: 'what are you looking to find resources for',
       name: 'for',
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
   ],
 };

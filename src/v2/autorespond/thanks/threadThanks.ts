@@ -1,16 +1,19 @@
 import type {
+  AnySelectMenuInteraction,
   ButtonInteraction,
   Client,
   CommandInteraction,
   Message,
-  SelectMenuInteraction,
   ThreadMember,
+  UserSelectMenuInteraction,
 } from 'discord.js';
 import {
-  MessageActionRow,
-  MessageButton,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   Collection,
-  MessageSelectMenu,
+  MessageActionRowComponentBuilder,
+  RoleSelectMenuBuilder,
 } from 'discord.js';
 
 import { POINT_LIMITER_IN_MINUTES } from '../../env.js';
@@ -45,9 +48,7 @@ export async function handleThreadThanks(msg: Message): Promise<void> {
     Collection<string, ThreadMember>,
     ThanksInteractionType[]
   ] = await Promise.all([
-    channel.members.fetch(undefined, { cache: false }) as unknown as Promise<
-      Collection<string, ThreadMember>
-    >,
+    channel.members.fetch({ cache: false }),
     ThanksInteraction.find({
       thanker: author.id,
       createdAt: {
@@ -80,8 +81,7 @@ export async function handleThreadThanks(msg: Message): Promise<void> {
     content: [
       "Hey, it looks like you're trying to thank one or many users, but haven't specified who. Who would you like to thank?",
       alreadyThanked.length > 0
-        ? _`There ${_.mapper({ 1: 'is' }, 'are')} **${_.n} user${
-            _.s
+        ? _`There ${_.mapper({ 1: 'is' }, 'are')} **${_.n} user${_.s
           } that you can't thank as you've thanked them recently**, so they won't show up as an option.`(
             alreadyThanked.length
           )
@@ -90,22 +90,18 @@ export async function handleThreadThanks(msg: Message): Promise<void> {
       .filter(Boolean)
       .join('\n'),
     components: [
-      new MessageActionRow().addComponents(
-        new MessageSelectMenu()
-          .addOptions(
-            otherMembers.map(item => ({
-              label: item.guildMember.displayName,
-              value: item.user.id,
-              description: `${item.user.username}#${item.user.discriminator}`,
-            }))
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        new RoleSelectMenuBuilder()
+          .setDefaultRoles(
+            ...otherMembers.keys()
           )
           .setMinValues(1)
           .setCustomId(`threadThanks🤔${msgId}🤔select🤔${author.id}`)
       ),
-      new MessageActionRow().addComponents(
-        new MessageButton()
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        new ButtonBuilder()
           .setLabel('Nevermind')
-          .setStyle('SECONDARY')
+          .setStyle(ButtonStyle.Secondary)
           .setCustomId(`threadThanks🤔${msgId}🤔cancel🤔${author.id}`)
       ),
     ],
@@ -120,7 +116,7 @@ export function attachThreadThanksHandler(client: Client): void {
   client.on(
     'interactionCreate',
     asyncCatch(async interaction => {
-      if (!(interaction.isSelectMenu() || interaction.isButton())) {
+      if (!(interaction.isAnySelectMenu() || interaction.isButton())) {
         return;
       }
       const { channel, customId, user, message, guild } = interaction;
@@ -149,7 +145,7 @@ export function attachThreadThanksHandler(client: Client): void {
       }
 
       if (type === 'select') {
-        const { values } = interaction as SelectMenuInteraction;
+        const { values } = interaction as UserSelectMenuInteraction;
         channel.messages.delete(message.id);
         const msgPromise = channel.messages.fetch(msgId);
         const thankedMembers = await guild.members.fetch({
@@ -194,14 +190,14 @@ export function attachThreadThanksHandler(client: Client): void {
 }
 
 function sendCloseThreadQuery(
-  interaction: SelectMenuInteraction | ButtonInteraction | CommandInteraction
+  interaction: AnySelectMenuInteraction | ButtonInteraction | CommandInteraction
 ) {
   interaction.reply({
     content: 'Would you like to archive this thread and mark it as resolved?',
     components: [
-      new MessageActionRow().addComponents(
-        new MessageButton()
-          .setStyle('PRIMARY')
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        new ButtonBuilder()
+          .setStyle(ButtonStyle.Primary)
           .setLabel('Yes please!')
           .setCustomId(`closeThread🤔${interaction.channel.id}🤔close`)
       ),

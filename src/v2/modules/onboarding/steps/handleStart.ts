@@ -1,7 +1,7 @@
-import type { Guild, GuildMember } from 'discord.js';
-import { MessageActionRow, MessageButton } from 'discord.js';
+import { ButtonStyle, Guild, GuildMember, MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
-import type { UserStateType } from '../db/user_state';
+import { UserStateType } from '../db/user_state';
 import { getThread } from '../utils/getThread.js';
 
 export async function handleStart(
@@ -18,9 +18,9 @@ export async function handleStart(
   setTimeout(async () => {
     await rulesMsg.edit({
       components: [
-        new MessageActionRow().addComponents([
-          new MessageButton()
-            .setStyle('SUCCESS')
+        new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+          new ButtonBuilder()
+            .setStyle(ButtonStyle.Success)
             .setLabel('I have read, and agree to follow the rules')
             .setCustomId('onboarding🤔rules_agreed'),
         ]),

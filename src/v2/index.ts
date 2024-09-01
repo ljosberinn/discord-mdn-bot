@@ -1,6 +1,6 @@
 import { init } from '@sentry/node';
-import type { Message } from 'discord.js';
-import { Client, Intents } from 'discord.js';
+import { ChannelType, Message } from 'discord.js';
+import { Client, IntentsBitField } from 'discord.js';
 import mongoose from 'mongoose';
 
 import {
@@ -37,11 +37,10 @@ import { getOnboardingStart } from './modules/onboarding/utils/onboardingStart.j
 import { registerUserContextMenu } from './user_context/index.js';
 import { stripMarkdownQuote } from './utils/content_format.js';
 
-
 const NON_COMMAND_MSG_TYPES = new Set([
-  'GUILD_TEXT',
-  'GUILD_PRIVATE_THREAD',
-  'GUILD_PUBLIC_THREAD',
+  ChannelType.GuildText,
+  ChannelType.PrivateThread,
+  ChannelType.PublicThread
 ]);
 
 if (IS_PROD) {
@@ -53,24 +52,24 @@ if (IS_PROD) {
 // This date is used to check if the message's been created before the bot's started
 export const startTime = new Date();
 loadLastDecayFromDB();
-
 const client = new Client({
   intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MEMBERS, // Privileged Intent
-    Intents.FLAGS.GUILD_BANS,
-    Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
-    Intents.FLAGS.GUILD_INTEGRATIONS,
-    Intents.FLAGS.GUILD_WEBHOOKS,
-    Intents.FLAGS.GUILD_INVITES,
-    Intents.FLAGS.GUILD_VOICE_STATES,
-    Intents.FLAGS.GUILD_PRESENCES, // Privileged Intent
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-    Intents.FLAGS.GUILD_MESSAGE_TYPING,
-    Intents.FLAGS.DIRECT_MESSAGES,
-    Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-    Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    'Guilds',
+    'GuildMembers',
+    'GuildBans',
+    'GuildEmojisAndStickers',
+    'MessageContent',
+    'GuildIntegrations',
+    'GuildWebhooks',
+    'GuildInvites',
+    'GuildVoiceStates',
+    'GuildPresences',
+    'GuildMessages',
+    'GuildMessageReactions',
+    'GuildMessageTyping',
+    'DirectMessages',
+    'DirectMessageReactions',
+    'DirectMessageTyping',
   ],
 });
 
@@ -96,10 +95,10 @@ client.once('ready', async (): Promise<void> => {
   attachThreadThanksHandler(client);
   attachThreadClose(client);
   if (await getOnboardingStart()) {
-    console.info("Onboarding functionality added")
+    console.info('Onboarding functionality added');
     attachOnboarding(client);
   } else {
-    console.info("Onboarding functionality not added")
+    console.info('Onboarding functionality not added');
   }
 
   void client.user.setActivity(`@${client.user.username} --help`);
@@ -107,7 +106,7 @@ client.once('ready', async (): Promise<void> => {
   await Promise.all(
     client.guilds.cache
       .filter(guild => blacklistedServer.has(guild.id))
-      .map(guild => guild.leave())
+      .map(guild => guild.leave()),
   );
 
   // eslint-disable-next-line no-console
@@ -117,12 +116,12 @@ client.once('ready', async (): Promise<void> => {
       joinedAt: joinedAt.toLocaleDateString(),
       memberCount,
       name,
-    }))
+    })),
   );
 
   try {
     await client.user.setAvatar('./logo.png');
-  } catch {}
+  } catch { }
 });
 
 const detectVarLimited = limitFnByUser(detectVar, {

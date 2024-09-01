@@ -1,15 +1,18 @@
 /* eslint-disable unicorn/prefer-query-selector */
-import type {
+import {
+  ApplicationCommandOptionType,
   ButtonInteraction,
+  ButtonStyle,
   Client,
   CommandInteraction,
+  ComponentType,
   Message,
-  SelectMenuInteraction,
+  MessageActionRowComponentBuilder,
+  StringSelectMenuInteraction,
 } from 'discord.js';
-import { MessageButton, MessageActionRow, MessageSelectMenu } from 'discord.js';
-import type { MessageComponentTypes } from 'discord.js/typings/enums';
+import { ButtonBuilder, ActionRowBuilder, StringSelectMenuBuilder, } from 'discord.js';
 import type { Node } from 'dom-parser';
-import DOMParser from 'dom-parser';
+import DOMParser, { parseFromString } from 'dom-parser';
 import { decode } from 'html-entities';
 
 import type { CommandDataWithHandler } from '../../../types';
@@ -43,8 +46,7 @@ const extractMetadataFromResult = (result: Node) => {
 };
 
 const textParser = (text: string): ParseResult => {
-  const parser = new DOMParser();
-  const document = parser.parseFromString(text);
+  const document = parseFromString(text);
 
   // Check if we were directed directly to the result.
   const isDirect = document.getElementById('quickref_functions') === null;
@@ -85,7 +87,7 @@ const handler = async (
   client: Client,
   interaction: CommandInteraction
 ): Promise<void> => {
-  const searchTerm = interaction.options.getString('query');
+  const searchTerm = interaction.options.get('query').value as string;
   const defer = interaction.deferReply();
   try {
     const { error, text, searchUrl } = await makeRequest(searchTerm);
@@ -104,8 +106,8 @@ const handler = async (
 
     const msgId = Math.random().toString(16);
 
-    const selectRow = new MessageActionRow().addComponents(
-      new MessageSelectMenu()
+    const selectRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      new StringSelectMenuBuilder()
         .setCustomId(`php🤔${msgId}🤔select`)
         .setMaxValues(5)
         .setMinValues(1)
@@ -122,10 +124,10 @@ const handler = async (
         )
     );
 
-    const buttonRow = new MessageActionRow().addComponents(
-      new MessageButton()
+    const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      new ButtonBuilder()
         .setLabel('Cancel')
-        .setStyle('SECONDARY')
+        .setStyle(ButtonStyle.Secondary)
         .setCustomId(`mdn🤔${msgId}🤔cancel`)
     );
 
@@ -133,10 +135,10 @@ const handler = async (
     const int = (await interaction.editReply({
       content: 'Please pick 1 - 5 options below to display',
       components: [selectRow, buttonRow],
-    })) as Message;
+    }))
 
     const interactionCollector = int.createMessageComponentCollector<
-      MessageComponentTypes.BUTTON | MessageComponentTypes.SELECT_MENU
+      ComponentType.Button | ComponentType.StringSelect
     >({
       filter: item =>
         item.user.id === interaction.user.id &&
@@ -145,7 +147,7 @@ const handler = async (
 
     interactionCollector.once(
       'collect',
-      async (interaction: ButtonInteraction | SelectMenuInteraction) => {
+      async (interaction: ButtonInteraction | StringSelectMenuInteraction) => {
         await interaction.deferUpdate();
         if (interaction.isButton()) {
           await int.delete();
@@ -176,7 +178,7 @@ export const phpCommand: CommandDataWithHandler = {
     {
       name: 'query',
       description: 'The search query for php',
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
       required: true,
     },
   ],

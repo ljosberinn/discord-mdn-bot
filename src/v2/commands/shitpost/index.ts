@@ -1,4 +1,4 @@
-import type { ApplicationCommandOptionChoiceData } from 'discord.js';
+import { ApplicationCommandOptionChoiceData, ApplicationCommandOptionType } from 'discord.js';
 
 import type { CommandDataWithHandler } from '../../../types';
 import {
@@ -40,7 +40,7 @@ const shitpostReplacements = {
 };
 
 const mapTransformToChoices = map(
-  (item: string): ApplicationCommandOptionChoiceData => ({
+  (item: string): ApplicationCommandOptionChoiceData<string> => ({
     name: item,
     value: item,
   })
@@ -51,8 +51,8 @@ export const shitpostInteraction: CommandDataWithHandler = {
     'A fun little shitpost command using some of the about/please/whyno commands',
   guildValidate: guild => guild.id === SERVER_ID,
   handler: async (client, interaction) => {
-    const topic = interaction.options.getString('topic');
-    const replacement = interaction.options.getString('replacement');
+    const topic = interaction.options.get('topic').value as string;
+    const replacement = interaction.options.get('replacement').value as string;
     const content = aboutMessages.get(topic);
     const { roles } = interaction.member;
 
@@ -87,13 +87,13 @@ export const shitpostInteraction: CommandDataWithHandler = {
       description: 'The topic to ask about',
       name: 'topic',
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
     {
       name: 'replacement',
       description: 'Replacement word to use',
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
   ],
 };

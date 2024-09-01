@@ -36,6 +36,7 @@ export const decay = async ({
   userId?: string;
 }): Promise<void> => {
   try {
+    console.log(guild)
     const users: IUser[] = await HelpfulRoleMember.find({
       guild: guild.id,
       points: {
@@ -84,9 +85,8 @@ export const decay = async ({
     await modChannel.send({
       embeds: [
         createEmbed({
-          description: `The point decay affected ${users.length} user${
-            users.length === 1 ? '' : 's'
-          }.`,
+          description: `The point decay affected ${users.length} user${users.length === 1 ? '' : 's'
+            }.`,
           fields,
           footerText: 'Point Decay System',
           provider: 'spam',

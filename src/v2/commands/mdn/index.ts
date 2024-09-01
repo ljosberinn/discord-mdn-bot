@@ -1,18 +1,19 @@
-import type {
+import {
+  ApplicationCommandOptionType,
   ButtonInteraction,
   Client,
   CommandInteraction,
   Message,
-  SelectMenuInteraction,
+  MessageActionRowComponentBuilder,
+  StringSelectMenuInteraction,
 } from 'discord.js';
-import { MessageButton } from 'discord.js';
+import { ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import {
   Collection,
-  MessageActionRow,
-  MessageEmbed,
-  MessageSelectMenu,
+  ActionRowBuilder,
+  EmbedBuilder,
+  ComponentType
 } from 'discord.js';
-import type { MessageComponentTypes } from 'discord.js/typings/enums';
 import { URL } from 'url';
 
 import type { CommandDataWithHandler } from '../../../types';
@@ -69,7 +70,7 @@ const mdnHandler = async (
   client: Client,
   interaction: CommandInteraction
 ): Promise<unknown> => {
-  const searchTerm: string = interaction.options.getString('query');
+  const searchTerm: string = interaction.options.get('query').value as string;
   const deferral = await interaction.deferReply({ ephemeral: true });
   try {
     const url = getSearchUrl(provider, searchTerm);
@@ -93,8 +94,8 @@ const mdnHandler = async (
     const collection = new Collection(
       json.documents.map(item => [item.slug, item])
     );
-    const selectRow = new MessageActionRow().addComponents(
-      new MessageSelectMenu()
+    const selectRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      new StringSelectMenuBuilder()
         .setCustomId(`mdn🤔${msgId}🤔select`)
         .setPlaceholder('Pick one to 5 options to display')
         .setMinValues(1)
@@ -107,20 +108,20 @@ const mdnHandler = async (
           }))
         )
     );
-    const buttonRow = new MessageActionRow().addComponents(
-      new MessageButton()
+    const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      new ButtonBuilder()
         .setLabel('Cancel')
-        .setStyle('SECONDARY')
+        .setStyle(ButtonStyle.Secondary)
         .setCustomId(`mdn🤔${msgId}🤔cancel`)
     );
 
     const int = (await interaction.editReply({
       content: 'Please pick 1 - 5 options below to display',
       components: [selectRow, buttonRow],
-    })) as Message;
+    }))
 
     const interactionCollector = int.createMessageComponentCollector<
-      MessageComponentTypes.SELECT_MENU | MessageComponentTypes.BUTTON
+      ComponentType.StringSelect | ComponentType.Button
     >({
       filter: item =>
         item.user.id === interaction.user.id &&
@@ -129,7 +130,7 @@ const mdnHandler = async (
 
     interactionCollector.once(
       'collect',
-      async (interaction: ButtonInteraction | SelectMenuInteraction) => {
+      async (interaction: ButtonInteraction | StringSelectMenuInteraction) => {
         await interaction.deferUpdate();
         if (interaction.isButton()) {
           await int.delete();
@@ -148,7 +149,7 @@ const mdnHandler = async (
         interaction.channel.send({
           content: `Results for "${searchTerm}"`,
           embeds: values.map(({ title, summary, slug }) =>
-            new MessageEmbed()
+            new EmbedBuilder()
               .setTitle(`${maybeClippy()} ${title}`)
               .setDescription(
                 summary
@@ -157,7 +158,7 @@ const mdnHandler = async (
                   .join(' ')
               )
               .setURL(buildDirectUrl(slug))
-              .setColor('WHITE')
+              .setColor('White')
           ),
         });
       }
@@ -178,7 +179,7 @@ export const mdnCommand: CommandDataWithHandler = {
     {
       name: 'query',
       description: 'query',
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
       required: true,
     },
   ],

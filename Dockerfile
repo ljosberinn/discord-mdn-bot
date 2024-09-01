@@ -1,4 +1,4 @@
-FROM node:16.18.1-slim AS deps
+FROM node:20.12.2-slim AS deps
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY src ./src
 RUN yarn install --frozen-lockfile
 RUN npm run build
 
-FROM node:16.18.1-slim
+FROM node:20.12.2-slim
 
 WORKDIR /app
 

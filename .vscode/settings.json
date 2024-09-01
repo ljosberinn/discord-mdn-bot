@@ -13,7 +13,7 @@
     "**/dist": true
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "always"
   },
   "deno.enable": false
 }

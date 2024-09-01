@@ -1,5 +1,5 @@
 import { addBreadcrumb } from '@sentry/node';
-import { EventEmitter } from 'events';
+import EventEmitter from 'node:events';
 
 import { castArray } from './castArray.js';
 
@@ -185,9 +185,8 @@ export class Cache<Value = unknown, Key = unknown> extends EventEmitter {
 
     addBreadcrumb({
       level: 'debug',
-      message: `Cache [MGet]: keys: ${keys.slice(0, 10)} (${
-        keys.length
-      } items)`,
+      message: `Cache [MGet]: keys: ${keys.slice(0, 10)} (${keys.length
+        } items)`,
     });
 
     for (const key of keys) {
@@ -263,9 +262,8 @@ export class Cache<Value = unknown, Key = unknown> extends EventEmitter {
 
     addBreadcrumb({
       level: 'debug',
-      message: `Cache [Del]: ${String(keyArr.slice(0, 10))} (${
-        keyArr.length
-      } items)`,
+      message: `Cache [Del]: ${String(keyArr.slice(0, 10))} (${keyArr.length
+        } items)`,
     });
 
     for (const key of keyArr) {
@@ -377,7 +375,7 @@ export class Cache<Value = unknown, Key = unknown> extends EventEmitter {
    * flush the stats and reset all counters to 0
    */
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public flushStats(): void {}
+  public flushStats(): void { }
 
   private _check(key: Key, data) {
     let ret = true;

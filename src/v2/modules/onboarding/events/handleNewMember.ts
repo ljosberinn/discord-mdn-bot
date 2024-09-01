@@ -1,5 +1,5 @@
-import type { GuildMember, Guild, TextChannel } from 'discord.js';
-import { MessageEmbed, MessageActionRow, MessageButton } from 'discord.js';
+import { GuildMember, Guild, TextChannel, ButtonStyle, ChannelType } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageActionRowComponentBuilder } from 'discord.js';
 
 import { NEW_USER_ROLE, ONBOARDING_CHANNEL, SERVER_ID } from '../../../env.js';
 import { rules } from '../consts/rules.js';
@@ -54,8 +54,7 @@ async function beginOnboarding(guild: Guild, member: GuildMember) {
     threadId: thread.id,
   });
   await thread.send(
-    `Hi ${member.toString()}, welcome to ${
-      guild.name
+    `Hi ${member.toString()}, welcome to ${guild.name
     }! Before you can get access to the rest of the server, we just need to go over a few things.
 
 First, to be able to interact with several of the features of this server, you **will** need embeds enabled.
@@ -64,9 +63,9 @@ Second:`
 
   const rulesMsg = await thread.send({
     embeds: [
-      new MessageEmbed()
+      new EmbedBuilder()
         .setTitle('📋 Our Community rules')
-        .setColor('GOLD')
+        .setColor('Gold')
         .addFields(
           rules.map((x, i) => ({
             name: `${i + 1}. ${x.title}`,
@@ -75,9 +74,9 @@ Second:`
         ),
     ],
     components: [
-      new MessageActionRow().addComponents([
-        new MessageButton()
-          .setStyle('SECONDARY')
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+        new ButtonBuilder()
+          .setStyle(ButtonStyle.Secondary)
           .setLabel('Just giving you a bit of time to read the rules...')
           .setEmoji('⏲')
           .setCustomId('onboarding🤔rules_agreed')
@@ -98,8 +97,8 @@ async function createOnboardingThread(
     reason: `Onboarding ${member.toString()}`,
   }
   try {
-    return await onboardingChannel.threads.create({...obj, type: 'GUILD_PRIVATE_THREAD'});
+    return await onboardingChannel.threads.create({ ...obj, type: ChannelType.PrivateThread });
   } catch {
-    return await onboardingChannel.threads.create({...obj, type: 'GUILD_PUBLIC_THREAD'});
+    return await onboardingChannel.threads.create({ ...obj, type: ChannelType.PublicThread });
   }
 }

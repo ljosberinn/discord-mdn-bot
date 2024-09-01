@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import type {
   Message,
   MessageEditOptions,
@@ -54,7 +54,7 @@ export const createListEmbed = ({
   url,
   footerText,
   description,
-}: ListEmbed): { embed: MessageEmbed } => {
+}: ListEmbed): { embed: EmbedBuilder } => {
   if (providers[provider]) {
     const { createTitle } = providers[provider];
 
@@ -93,14 +93,14 @@ export const createEmbed = ({
   description,
   fields = [],
   author = null,
-}: Embed): { embed: MessageEmbed } => {
+}: Embed): { embed: EmbedBuilder } => {
   const isSpam = provider === 'spam';
 
   if (isSpam || providers[provider]) {
     const { color, icon } = isSpam ? spamMeta : providers[provider];
 
     return {
-      embed: new MessageEmbed({
+      embed: new EmbedBuilder({
         author,
         color,
         description,
@@ -172,9 +172,9 @@ export const adjustTitleLength = (title: string): string => {
   const cleansedTitle =
     titleLength > DESCRIPTION_LENGTH_LIMIT
       ? `${title.slice(
-          0,
-          Math.max(0, DESCRIPTION_LENGTH_LIMIT - SEPARATOR_LENGTH)
-        )}...`
+        0,
+        Math.max(0, DESCRIPTION_LENGTH_LIMIT - SEPARATOR_LENGTH)
+      )}...`
       : title;
 
   return cleansedTitle.replace(/\n/gmu, ' ');

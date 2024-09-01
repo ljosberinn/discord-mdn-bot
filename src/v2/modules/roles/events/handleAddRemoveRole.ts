@@ -21,9 +21,8 @@ async function toggle(interaction: ButtonInteraction, role: Role) {
 
   return interaction.reply({
     ephemeral: true,
-    content: `I've ${isAdd ? 'added you to' : 'removed you from'} the ${
-      role.name
-    } role.`,
+    content: `I've ${isAdd ? 'added you to' : 'removed you from'} the ${role.name
+      } role.`,
   });
 }
 
@@ -57,39 +56,38 @@ export const handleAddRemoveRole = async (
   } else if (subtype === 'remove') {
     await member.roles.remove(roles);
   } else {
-    return toggle(interaction as ButtonInteraction, roles[0]);
+    toggle(interaction as ButtonInteraction, roles[0]);
+    return
   }
 
-  if (interaction.isSelectMenu()) {
+  if (interaction.isStringSelectMenu()) {
     const [addRoles, removeRoles] = getAddRemoveRoles(
       interaction.member as GuildMember
     );
 
     interaction.update({
-      content: `✅ You've been ${
-        subtype === 'add' ? 'added to' : 'removed from'
-      } ${listFormatter.format(roleNames)}`,
+      content: `✅ You've been ${subtype === 'add' ? 'added to' : 'removed from'
+        } ${listFormatter.format(roleNames)}`,
       components: [
         addRoles.length > 0 &&
-          generateRoleSelect(
-            'Which roles would you like to join?',
-            'roles🤔add',
-            addRoles
-          ),
+        generateRoleSelect(
+          'Which roles would you like to join?',
+          'roles🤔add',
+          addRoles
+        ),
         removeRoles.length > 0 &&
-          generateRoleSelect(
-            'Which roles would you like to leave?',
-            'roles🤔remove',
-            removeRoles
-          ),
+        generateRoleSelect(
+          'Which roles would you like to leave?',
+          'roles🤔remove',
+          removeRoles
+        ),
       ].filter(Boolean),
     });
   } else {
     interaction.reply({
       ephemeral: true,
-      content: `You've been ${
-        subtype === 'add' ? 'added to' : 'removed from'
-      } ${listFormatter.format(roleNames)}`,
+      content: `You've been ${subtype === 'add' ? 'added to' : 'removed from'
+        } ${listFormatter.format(roleNames)}`,
     });
   }
 };

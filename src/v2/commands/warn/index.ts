@@ -1,5 +1,5 @@
-import type { Client, CommandInteraction } from 'discord.js';
-import Fuse from 'fuse.js';
+import { ApplicationCommandOptionType, Client, CommandInteraction } from 'discord.js';
+import Fuse, { FuseResult } from 'fuse.js';
 
 import type { CommandDataWithHandler } from '../../../types';
 import { asyncCatch } from '../../utils/asyncCatch.js';
@@ -38,13 +38,12 @@ export const warn: CommandDataWithHandler = {
     client: Client,
     interaction: CommandInteraction
   ): Promise<void> => {
-    const user = interaction.options.getUser('user');
-    const rules = interaction.options.getString('rules').split('|');
-    const reason = interaction.options.getString('reason');
+    const user = interaction.options.get('user').user;
+    const rules = (interaction.options.get('rules').value as string).split('|');
+    const reason = interaction.options.get('reason').value as string;
 
-    const warnMessage = _`Rule${_.s} ${rules}. Please read the <#${rulesId}>. ${
-      reason ?? ''
-    }`;
+    const warnMessage = _`Rule${_.s} ${rules}. Please read the <#${rulesId}>. ${reason ?? ''
+      }`;
 
     await interaction.reply(`Debug Received:
 user: ${user}
@@ -84,19 +83,19 @@ warn msg: ${warnMessage(rules.length)}
     {
       name: 'user',
       description: 'Person to warn',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
       required: true,
     },
     {
       name: 'rules',
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
       description: 'What rule(s) is the user breaking',
       autocomplete: true,
       required: true,
     },
     {
       name: 'reason',
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
       description: 'The reason the user is getting warned',
     },
   ],
@@ -127,7 +126,7 @@ function comb(items: { name: string; value: string }[]) {
   };
 }
 
-function removeRepeated<T>(arr: Fuse.FuseResult<T>[][]) {
+function removeRepeated<T>(arr: FuseResult<T>[][]) {
   console.log(arr);
   return arr.filter(x => {
     const s = new Set(x.map(i => i.refIndex));

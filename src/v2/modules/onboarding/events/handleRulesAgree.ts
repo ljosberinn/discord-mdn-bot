@@ -1,5 +1,5 @@
-import type { GuildMember, Interaction, Message } from 'discord.js';
-import { MessageActionRow, MessageButton } from 'discord.js';
+import { ButtonStyle, GuildMember, Interaction, Message, MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, MessageComponentBuilder } from 'discord.js';
 
 import { UserState } from '../db/user_state.js';
 import { continueOnboarding } from '../utils/continueOnboarding.js';
@@ -20,13 +20,13 @@ export const handleRulesAgree = async (
 
   await message.edit({
     components: [
-      new MessageActionRow().addComponents([
-        new MessageButton()
-          .setStyle('SUCCESS')
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        new ButtonBuilder()
+          .setStyle(ButtonStyle.Success)
           .setLabel(`You've agreed to the rules.`)
           .setCustomId('onboarding🤔rules_agreed')
           .setDisabled(true),
-      ]),
+      ),
     ],
   });
   interaction.reply('Great! Just a couple more steps.');

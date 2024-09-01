@@ -1,3 +1,4 @@
+import { ButtonStyle } from 'discord.js';
 import { MultistepForm, MultiStepFormStep } from '../../utils/MultistepForm.js';
 import { createMarkdownCodeBlock } from '../../utils/discordTools.js';
 import {
@@ -16,15 +17,15 @@ const isNotTooLong = length => (str: string) => {
 };
 const and =
   <T, K>(...fns: ((input: T) => K)[]) =>
-  (input: T): K | true => {
-    for (const fn of fns) {
-      const item: unknown = fn(input);
-      if (item !== true) {
-        return item as K;
+    (input: T): K | true => {
+      for (const fn of fns) {
+        const item: unknown = fn(input);
+        if (item !== true) {
+          return item as K;
+        }
       }
-    }
-    return true;
-  };
+      return true;
+    };
 const dollarFormat = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -43,10 +44,9 @@ const greeterMessage =
     1. Your job must provide monetary compensation.\n
     2. Your job must not be related to cryptocurrency, blockchain, NFTs, Web3 technologies, or gambling in any way.\n
     3. Your job must provide at least $${MINIMAL_COMPENSATION} in compensation.\n
-    4. You can only post a job once every ${
-      Number.parseInt(POST_LIMITER_IN_HOURS, 10) === 1
-        ? 'hour'
-        : `${POST_LIMITER_IN_HOURS} hours`
+    4. You can only post a job once every ${Number.parseInt(POST_LIMITER_IN_HOURS, 10) === 1
+      ? 'hour'
+      : `${POST_LIMITER_IN_HOURS} hours`
     }.\n
     5. You agree not to abuse our job posting service or circumvent any server rules, and you understand that doing so will result in a ban.\n`,
     'md'
@@ -70,8 +70,8 @@ export const questions = {
     type: 'button',
     body: greeterMessage,
     buttons: [
-      { label: 'I Agree', value: 'ok', style: 'SUCCESS' },
-      { label: 'Cancel', value: 'cancel', style: 'DANGER' },
+      { label: 'I Agree', value: 'ok', style: ButtonStyle.Success },
+      { label: 'Cancel', value: 'cancel', style: ButtonStyle.Danger },
     ],
     buttonDelay: 5000,
     next: value => (value === 'ok' ? 'remote' : MultistepForm.cancelled),
@@ -151,4 +151,4 @@ export const questions = {
     body: 'Provide the method that applicants should apply for your job (e.g., DM, email, website application, etc.) and any additional information that you think would be helpful to potential applicants.',
     validate: and<string, string | boolean>(isNotEmpty, isNotTooLong(100)),
   },
-} as const;
+} as const satisfies Record<string, MultiStepFormStep>;

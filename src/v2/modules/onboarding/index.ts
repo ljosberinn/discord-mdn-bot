@@ -1,5 +1,4 @@
-import type { Client, GuildMember, Message, TextChannel } from 'discord.js';
-import { Permissions } from 'discord.js';
+import { Client, Guild, GuildMember, Message, MessageType, PermissionFlagsBits, PermissionOverwriteManager, PermissionsBitField, Role, TextChannel } from 'discord.js';
 
 import { SERVER_ID } from '../../env.js';
 import { NEW_USER_ROLE, ONBOARDING_CHANNEL, JOIN_LOG_CHANNEL } from '../../env.js';
@@ -68,7 +67,7 @@ async function playCatchup(guild) {
     userState?.updatedAt ?? new Date(catchUpFrom)
   )) {
     if (
-      message.type === 'GUILD_MEMBER_JOIN' &&
+      message.type === MessageType.UserJoin &&
       message.member &&
       !userMap.has(message.member.id)
     ) {
@@ -81,9 +80,9 @@ async function playCatchup(guild) {
   }
 }
 
-function addNewRolePermissions(guild, role) {
-  const perms = new Permissions(Permissions.DEFAULT);
-  perms.remove(Permissions.FLAGS.VIEW_CHANNEL);
+function addNewRolePermissions(guild: Guild, role: Role) {
+  const permissionFlags = PermissionsBitField.Default & ~PermissionsBitField.Flags.ViewChannel
+  const permissions = new PermissionsBitField(permissionFlags)
 
   for (const [, channel] of guild.channels.cache) {
     if (
@@ -91,7 +90,7 @@ function addNewRolePermissions(guild, role) {
       channel.id !== ONBOARDING_CHANNEL
     ) {
       try {
-        channel.permissionOverwrites.create(role, perms.serialize());
+        channel.permissionOverwrites.create(role, permissions.serialize());
       } catch (error) {
         console.error(error);
       }

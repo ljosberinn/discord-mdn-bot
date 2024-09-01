@@ -1,7 +1,6 @@
-import type { Guild, GuildMember } from 'discord.js';
-import { MessageButton } from 'discord.js';
-import { MessageSelectMenu } from 'discord.js';
-import { MessageActionRow } from 'discord.js';
+import { ButtonStyle, Guild, GuildMember } from 'discord.js';
+import { ButtonBuilder, MessageActionRowComponentBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder } from 'discord.js';
 
 import { NOTIFY_ROLES } from '../../roles/consts/notifyRoles.js';
 import { ROLES } from '../../roles/consts/roles.js';
@@ -25,8 +24,8 @@ export async function handleRoleSelection(
 
 We have quite a few channels, so to gain access to them, you'll need to opt in to viewing them. Fortunately, that's the step you're on now. Use the select box below to pick which channels you'd like to see, or hit the button to opt in to viewing all the channels.`,
     components: [
-      new MessageActionRow().addComponents([
-        new MessageSelectMenu()
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+        new StringSelectMenuBuilder()
           .addOptions(
             ROLES.map(x => ({
               label: x.name,
@@ -38,11 +37,11 @@ We have quite a few channels, so to gain access to them, you'll need to opt in t
           .setMaxValues(ROLES.length)
           .setPlaceholder("Pick which roles you're interested in"),
       ]),
-      new MessageActionRow().addComponents(
-        new MessageButton()
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+        new ButtonBuilder()
           .setCustomId('onboarding🤔roles🤔All Development')
           .setLabel('View All Development Channels')
-          .setStyle('PRIMARY')
+          .setStyle(ButtonStyle.Primary)
       ),
     ],
   });
@@ -51,8 +50,8 @@ We have quite a few channels, so to gain access to them, you'll need to opt in t
     content:
       'We also have some roles for if you wish to be notified about various optional announcements, which you can opt into here:',
     components: [
-      new MessageActionRow().addComponents([
-        new MessageSelectMenu()
+      new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+        new StringSelectMenuBuilder()
           .addOptions(
             NOTIFY_ROLES.map(x => ({
               label: x.name,

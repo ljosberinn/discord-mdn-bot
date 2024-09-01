@@ -1,9 +1,12 @@
-import type {
-  MessageEmbed,
+import {
+  EmbedBuilder,
   Client,
   EmbedField,
   CommandInteraction,
   GuildMemberRoleManager,
+  Interaction,
+  ChatInputCommandInteraction,
+  ApplicationCommandOptionType,
 } from 'discord.js';
 import type { GuildMember } from 'discord.js';
 
@@ -72,10 +75,9 @@ const rolesArray = (roles: string[] | GuildMemberRoleManager) =>
 
 async function handlePoints(
   client: Client,
-  interaction: CommandInteraction
+  interaction: ChatInputCommandInteraction
 ): Promise<void> {
   const isAdmin = isModOrAdmin(rolesArray(interaction.member.roles));
-
   await interaction.deferReply();
 
   switch (interaction.options.getSubcommand()) {
@@ -180,8 +182,7 @@ async function handlePointsGet(
     embeds: [
       createPointCheckEmbed(
         userName,
-        `${isAdmin ? 'The user has' : 'You have'} accumulated ${points} point${
-          points === 1 ? '' : 's'
+        `${isAdmin ? 'The user has' : 'You have'} accumulated ${points} point${points === 1 ? '' : 's'
         }.`,
         isAdmin ? undefined : 'Helpful User Points'
       ),
@@ -273,7 +274,7 @@ async function handlePointsSet(
     curr < HELPFUL_ROLE_POINT_THRESHOLD_NUM
   ) {
     await guildMember.roles.remove(HELPFUL_ROLE_ID);
-    output.fields.push({
+    output.addFields({
       inline: false,
       name: '⚠ Role Change',
       value: '❌ Helpful Revoked',
@@ -283,7 +284,7 @@ async function handlePointsSet(
     curr > HELPFUL_ROLE_POINT_THRESHOLD_NUM
   ) {
     await guildMember.roles.add(HELPFUL_ROLE_ID);
-    output.fields.push({
+    output.addFields({
       inline: false,
       name: '⚠ Role Change',
       value: '✅ Helpful Granted',
@@ -297,7 +298,7 @@ function createPointCheckEmbed(
   userName: string,
   description: string,
   footerText = 'Admin: Points Handler'
-): MessageEmbed {
+): EmbedBuilder {
   return createEmbed({
     description,
     footerText,
@@ -309,7 +310,7 @@ function createPointCheckEmbed(
 function createPointsEmbed(
   description: string,
   fields: EmbedField[] = []
-): MessageEmbed {
+): EmbedBuilder {
   return createEmbed({
     description,
     fields,
@@ -326,10 +327,10 @@ async function handleLeaderboards(
     const topUsers: IUser[] =
       LEADERBOARD_LIMIT > 0
         ? [
-            ...(await HelpfulRoleMember.find({ guild: interaction.guild.id })
-              .sort({ points: -1 })
-              .limit(LEADERBOARD_LIMIT)),
-          ]
+          ...(await HelpfulRoleMember.find({ guild: interaction.guild.id })
+            .sort({ points: -1 })
+            .limit(LEADERBOARD_LIMIT)),
+        ]
         : [];
 
     const fields: OutputField[] = topUsers.map(
@@ -343,9 +344,8 @@ async function handleLeaderboards(
     );
 
     const output = createEmbed({
-      description: `${
-        fields.length > 0 ? 'Top helpful users:' : 'No users found.'
-      }`,
+      description: `${fields.length > 0 ? 'Top helpful users:' : 'No users found.'
+        }`,
       fields,
       footerText: 'Leaderboard: Helpful Users',
       provider: 'spam',
@@ -370,16 +370,16 @@ export const pointsHandlers: CommandDataWithHandler = {
     {
       name: 'leaderboard',
       description: `Display the points leaderboard, showing the top ${LEADERBOARD_LIMIT} users`,
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
     },
     {
       name: 'get',
       description: 'Get points of a user',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
       options: [
         {
           name: 'user',
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           description: 'The user to get points for (Mod/Admins only)',
         },
       ],
@@ -387,17 +387,17 @@ export const pointsHandlers: CommandDataWithHandler = {
     {
       name: 'set',
       description: 'Set points of user (Mod/Admin only)',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
       options: [
         {
           name: 'user',
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           description: 'The user to set points for (Mod/Admins only)',
           required: true,
         },
         {
           name: 'value',
-          type: 'INTEGER',
+          type: ApplicationCommandOptionType.Integer,
           description: 'Number of points to set the user to have',
           required: true,
         },
@@ -406,11 +406,11 @@ export const pointsHandlers: CommandDataWithHandler = {
     {
       name: 'reset',
       description: 'Set points of user (Mod/Admin only)',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
       options: [
         {
           name: 'user',
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           description: 'The user to reset points for (Mod/Admins only)',
           required: true,
         },
@@ -419,7 +419,7 @@ export const pointsHandlers: CommandDataWithHandler = {
     {
       name: 'decay',
       description: 'See how long till the next points decay.',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
     },
   ],
 };

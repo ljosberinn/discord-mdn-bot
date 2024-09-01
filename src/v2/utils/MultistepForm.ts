@@ -1,16 +1,20 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 
-import type {
-  ButtonInteraction,
-  DMChannel,
-  Message,
-  MessageActionRowComponentResolvable,
-  MessageButtonStyle,
-  PartialMessage,
-  TextChannel,
-  ThreadChannel,
-  User,
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
+  MessageActionRowComponentBuilder,
+  type ButtonInteraction,
+  type DMChannel,
+  type Message,
+  type MessageActionRowComponentResolvable,
+  type PartialMessage,
+  type TextChannel,
+  type ThreadChannel,
+  type User,
 } from 'discord.js';
 
 import { AWAIT_MESSAGE_TIMEOUT } from '../../env.js';
@@ -26,7 +30,7 @@ export type ButtonQuestion = {
   buttons: readonly {
     label: string;
     value: string;
-    style?: MessageButtonStyle;
+    style?: ButtonStyle;
   }[];
   buttonDelay?: number;
 } & QuestionBase;
@@ -71,10 +75,8 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
     const message = await this.#channel.send({
       content: `**${step.body}**`,
       components: [
-        {
-          type: 'ACTION_ROW',
-          components: this.genButtons<P>(step, !!step.buttonDelay),
-        },
+        new ActionRowBuilder<MessageActionRowComponentBuilder>().setComponents(...this.genButtons<P>(step, !!step.buttonDelay))
+
       ],
     });
 
@@ -82,17 +84,15 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
       setTimeout(() => {
         message.edit({
           components: [
-            {
-              type: 'ACTION_ROW',
-              components: this.genButtons<P>(step),
-            },
+            new ActionRowBuilder<MessageActionRowComponentBuilder>()
+              .setComponents(...this.genButtons<P>(step))
           ],
         });
       }, step.buttonDelay);
     }
 
     const collector = message.createMessageComponentCollector({
-      componentType: 'BUTTON',
+      componentType: ComponentType.Button,
       filter: interaction => interaction.user.id === this.#user.id,
     });
 
@@ -104,12 +104,11 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
           return;
         }
 
-        collector.off('collect', handler);
+        collector.stop('id matched');
         await interaction.deferUpdate();
         interaction.editReply({
-          content: `**${step.body}**\n${
-            step.buttons.find(({ value: val }) => val === value).label
-          }`,
+          content: `**${step.body}**\n${step.buttons.find(({ value: val }) => val === value).label
+            }`,
           components: [],
         });
         resolver.resolve(value);
@@ -122,7 +121,7 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
         return;
       }
 
-      collector.off('collect', handler);
+      collector.stop('cancelled');
       resolver.resolve(__cancelled__);
       message.edit({
         components: [],
@@ -221,15 +220,13 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
   private genButtons<P extends ButtonQuestion>(
     step: P,
     disabled?: boolean
-  ): MessageActionRowComponentResolvable[] {
+  ): ButtonBuilder[] {
     return step.buttons.map(
-      (button): MessageActionRowComponentResolvable => ({
-        type: 'BUTTON',
-        label: button.label,
-        style: button.style ?? 'PRIMARY',
-        customId: `${this.#id}🤔${button.value}`,
-        disabled: disabled ?? undefined,
-      })
+      (button) => new ButtonBuilder()
+        .setLabel(button.label)
+        .setStyle(button.style ?? ButtonStyle.Primary)
+        .setCustomId(`${this.#id}🤔${button.value}`)
+        .setDisabled(disabled ?? false)
     );
   }
 
@@ -239,22 +236,19 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
     const message = await this.#channel.send({
       content,
       components: [
-        {
-          type: 'ACTION_ROW',
-          components: [
-            {
-              type: 'BUTTON',
-              label: 'Cancel',
-              style: 'DANGER',
-              customId: `${this.#id}🤔${messageId}`,
-            },
-          ],
-        },
+        new ActionRowBuilder<MessageActionRowComponentBuilder>()
+          .setComponents(
+            new ButtonBuilder()
+              .setLabel('Cancel')
+              .setStyle(ButtonStyle.Danger)
+              .setCustomId(`${this.#id}🤔${messageId}`)
+          )
+
       ],
     });
 
     const collector = message.createMessageComponentCollector({
-      componentType: 'BUTTON',
+      componentType: ComponentType.Button,
       filter: interaction => interaction.user.id === this.#user.id,
     });
 
@@ -265,7 +259,7 @@ export class MultistepForm<T extends Record<string, MultiStepFormStep>> {
         if (messageId !== cancelId || id !== this.#id) {
           return;
         }
-        collector.off('collect', handler);
+        collector.stop('cancelled');
         message.delete();
         message.channel.send('Cancelled');
       }

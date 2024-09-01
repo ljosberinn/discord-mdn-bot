@@ -1,21 +1,24 @@
-import type {
+import {
   ApplicationCommandChannelOptionData,
   ApplicationCommandChoicesData,
   ApplicationCommandData,
   ApplicationCommandNonOptionsData,
   ApplicationCommandOptionData,
+  ApplicationCommandOptionType,
   ApplicationCommandSubCommandData,
   ApplicationCommandSubGroupData,
+  ApplicationCommandType,
+  PermissionsBitField,
 } from 'discord.js';
 
 export function normalizeApplicationCommandData<
   T extends ApplicationCommandData
 >(cmd: T): T {
-  if (!('type' in cmd) || cmd.type === 'CHAT_INPUT') {
+  if (!('type' in cmd) || cmd.type === ApplicationCommandType.ChatInput) {
     return {
       ...cmd,
       type: 'CHAT_INPUT',
-      defaultPermission: cmd.defaultPermission ?? false,
+      defaultPermission: cmd.defaultMemberPermissions ?? PermissionsBitField.Default,
       options: (cmd.options ?? []).map(normalizeApplicationOptionData),
     };
   }
@@ -24,14 +27,14 @@ export function normalizeApplicationCommandData<
 
 function normalizeApplicationOptionData<
   T extends
-    | ApplicationCommandOptionData
-    | ApplicationCommandSubCommandData
-    | ApplicationCommandSubGroupData
-    | ApplicationCommandNonOptionsData
-    | ApplicationCommandChoicesData
-    | ApplicationCommandChannelOptionData
+  | ApplicationCommandOptionData
+  | ApplicationCommandSubCommandData
+  | ApplicationCommandSubGroupData
+  | ApplicationCommandNonOptionsData
+  | ApplicationCommandChoicesData
+  | ApplicationCommandChannelOptionData
 >(option: T): T {
-  if (option.type === 'SUB_COMMAND') {
+  if (option.type === ApplicationCommandOptionType.Subcommand) {
     return {
       ...option,
       options: (option.options ?? []).map(normalizeApplicationOptionData),
@@ -39,7 +42,7 @@ function normalizeApplicationOptionData<
     };
   }
 
-  if (option.type === 'SUB_COMMAND_GROUP') {
+  if (option.type === ApplicationCommandOptionType.SubcommandGroup) {
     return {
       ...option,
       options: (option.options ?? []).map(normalizeApplicationOptionData),

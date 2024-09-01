@@ -1,30 +1,28 @@
 import type { User } from '@sentry/types';
 import { formatDistanceToNow } from 'date-fns';
-import type {
+import {
   EmbedField,
   Client,
   CommandInteraction,
-  Message,
   ButtonInteraction,
-  SelectMenuInteraction,
+  ComponentType,
+  ApplicationCommandOptionType,
+  StringSelectMenuInteraction,
+  MessageActionRowComponentBuilder,
 } from 'discord.js';
 import {
-  MessageEmbed,
+  EmbedBuilder,
   Collection,
-  MessageActionRow,
-  MessageButton,
-  MessageSelectMenu,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
 } from 'discord.js';
-import type { MessageComponentTypes } from 'discord.js/typings/enums';
 import { collect, take } from 'domyno';
 import { URL } from 'url';
 
 import type { CommandDataWithHandler } from '../../../types';
 import { clampLengthMiddle, clampLength } from '../../utils/clampStr.js';
-import type { Embed } from '../../utils/discordTools.js';
 import {
   createMarkdownLink,
-  createEmbed,
   createMarkdownBash,
 } from '../../utils/discordTools.js';
 import { website, language } from '../../utils/emojis.js';
@@ -68,7 +66,7 @@ const handleNpmCommand = async (
   client: Client,
   interaction: CommandInteraction
 ): Promise<void> => {
-  const searchTerm = interaction.options.getString('name');
+  const searchTerm = interaction.options.get('name').value as string;
   await interaction.deferReply({ ephemeral: true });
   try {
     const json = await fetch<NPMResponse[]>({
@@ -97,8 +95,8 @@ const handleNpmCommand = async (
     const collection = new Collection(
       firstTenResults.map(item => [item.url, item])
     );
-    const selectRow = new MessageActionRow().addComponents(
-      new MessageSelectMenu()
+    const selectRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      new StringSelectMenuBuilder()
         .setCustomId(`npm🤔${msgId}🤔select`)
         .setPlaceholder('Pick one option to display')
         .setMinValues(1)
@@ -115,10 +113,10 @@ const handleNpmCommand = async (
     const int = (await interaction.editReply({
       content: 'Please pick 1 option below to display',
       components: [selectRow],
-    })) as Message;
+    }))
 
     const interactionCollector = int.createMessageComponentCollector<
-      MessageComponentTypes.BUTTON | MessageComponentTypes.SELECT_MENU
+      ComponentType.Button | ComponentType.StringSelect
     >({
       filter: item =>
         item.user.id === interaction.user.id &&
@@ -127,7 +125,7 @@ const handleNpmCommand = async (
 
     interactionCollector.once(
       'collect',
-      async (interaction: ButtonInteraction | SelectMenuInteraction) => {
+      async (interaction: ButtonInteraction | StringSelectMenuInteraction) => {
         await interaction.deferUpdate();
         if (interaction.isButton()) {
           return;
@@ -184,9 +182,9 @@ const createNPMEmbed = (
     author,
   }: NPMEmbed,
   user: User
-): MessageEmbed =>
-  new MessageEmbed()
-    .setAuthor(`📦 Last updated ${lastUpdate}`)
+): EmbedBuilder =>
+  new EmbedBuilder()
+    .setAuthor({ name: `📦 Last updated ${lastUpdate}` })
     .setTitle(`${name}`)
     .setThumbnail(
       'https://static.npmjs.com/338e4905a2684ca96e08c7780fc68412.png'
@@ -204,8 +202,10 @@ const createNPMEmbed = (
     })
     .setURL(url)
     .setFooter(
-      `requested by ${user.username}#${user.discriminator}`,
-      user.avatarURL({ size: 64, format: 'webp' })
+      {
+        text: `requested by ${user.username}`,
+        iconURL: user.avatarURL({ size: 64, format: 'webp' })
+      }
     )
     .setColor(0xcb_37_37);
 
@@ -218,37 +218,37 @@ const createFields = (
   externalUrls: { homepage: string; repository: string },
   maintainers: number
 ): EmbedField[] => [
-  {
-    inline: false,
-    name: 'How to install',
-    value: createMarkdownBash(
-      [`npm install ${name}`, '# Or', `yarn add ${name}`].join('\n')
-    ),
-  },
-  ...Object.entries(externalUrls)
-    .filter(([, url]) => !!url)
-    .map(([host, url]) => {
-      const markdownTitle = sanitizePackageLink(host, url);
+    {
+      inline: false,
+      name: 'How to install',
+      value: createMarkdownBash(
+        [`npm install ${name}`, '# Or', `yarn add ${name}`].join('\n')
+      ),
+    },
+    ...Object.entries(externalUrls)
+      .filter(([, url]) => !!url)
+      .map(([host, url]) => {
+        const markdownTitle = sanitizePackageLink(host, url);
 
-      const emoji = host === 'homepage' ? website : false;
+        const emoji = host === 'homepage' ? website : false;
 
-      return {
-        inline: true,
-        name: emoji ? `${emoji} ${host}` : host,
-        value: createMarkdownLink(
-          markdownTitle.endsWith('/')
-            ? markdownTitle.slice(0, Math.max(0, markdownTitle.length - 1))
-            : markdownTitle,
-          url
-        ),
-      };
-    }),
-  {
-    inline: true,
-    name: `${language} maintainers`,
-    value: maintainers.toString(),
-  },
-];
+        return {
+          inline: true,
+          name: emoji ? `${emoji} ${host}` : host,
+          value: createMarkdownLink(
+            markdownTitle.endsWith('/')
+              ? markdownTitle.slice(0, Math.max(0, markdownTitle.length - 1))
+              : markdownTitle,
+            url
+          ),
+        };
+      }),
+    {
+      inline: true,
+      name: `${language} maintainers`,
+      value: maintainers.toString(),
+    },
+  ];
 
 const sanitizePackageLink = (host: string, link: string) => {
   const { protocol, pathname } = new URL(link);
@@ -271,7 +271,7 @@ export const npmInteraction: CommandDataWithHandler = {
     {
       name: 'name',
       description: 'The name of the package',
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
       required: true,
     },
   ],

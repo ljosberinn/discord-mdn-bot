@@ -1,8 +1,8 @@
-import type { Guild, GuildMember } from 'discord.js';
-import { MessageActionRow, MessageButton } from 'discord.js';
+import { ButtonStyle, Guild, GuildMember, MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
 
 import { INTRO_CHANNEL, INTRO_ROLE } from '../../../env.js';
-import type { UserStateType } from '../db/user_state';
+import { UserStateType } from '../db/user_state';
 import { getThread } from '../utils/getThread.js';
 import { sneakPin } from '../utils/sneakPin.js';
 
@@ -19,10 +19,10 @@ export async function handleIntroduction(
     const msg = await thread.send({
       content: `:point_left: You should now have access to the <#${INTRO_CHANNEL}> channel. It would be great if you could introduce yourself in that channel. We understand if you don't want to, however, so feel free to skip this step now, or do it later`,
       components: [
-        new MessageActionRow().addComponents([
-          new MessageButton()
+        new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents([
+          new ButtonBuilder()
             .setLabel('Skip')
-            .setStyle('DANGER')
+            .setStyle(ButtonStyle.Danger)
             .setEmoji('⏩')
             .setCustomId('onboarding🤔skip_intro'),
         ]),

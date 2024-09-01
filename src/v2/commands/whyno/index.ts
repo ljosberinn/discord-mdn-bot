@@ -1,12 +1,13 @@
-import type {
+import {
   ApplicationCommandOptionChoiceData,
+  ApplicationCommandOptionType,
   Client,
   CommandInteraction,
 } from 'discord.js';
 
-import type { CommandDataWithHandler } from '../../../types';
+import { CommandDataWithHandler } from '../../../types';
 import { map } from '../../utils/map.js';
-import type { ValueOrNullary } from '../../utils/valueOrCall.js';
+import { ValueOrNullary } from '../../utils/valueOrCall.js';
 import { valueOrCall } from '../../utils/valueOrCall.js';
 import { channel } from './handlers/channel.js';
 import { jquery } from './handlers/jquery.js';
@@ -17,7 +18,7 @@ const whynoMessages = new Map<string, ValueOrNullary<string>>([
 ]);
 
 const mapTransformToChoices = map(
-  (item: string): ApplicationCommandOptionChoiceData => ({
+  (item: string): ApplicationCommandOptionChoiceData<string> => ({
     name: item,
     value: item,
   })
@@ -30,7 +31,7 @@ export const whynoInteraction: CommandDataWithHandler = {
     interaction: CommandInteraction
   ): Promise<void> => {
     const topic = interaction.options.get('topic').value as string;
-    const user = interaction.options.getUser('tag');
+    const user = interaction.options.get('tag').user;
     const content = whynoMessages.get(topic);
 
     if (content) {
@@ -49,12 +50,12 @@ export const whynoInteraction: CommandDataWithHandler = {
       description: 'The topic in question',
       name: 'topic',
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
     {
       name: 'tag',
       description: 'Optional Person to Tag',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
     },
   ],
 };

@@ -1,4 +1,4 @@
-import type { Client } from 'discord.js';
+import { ApplicationCommandType, Client } from 'discord.js';
 import { Collection } from 'discord.js';
 
 // quick responses
@@ -11,12 +11,13 @@ export const registerMessageContextMenu = async (
   client: Client
 ): Promise<void> => {
   const existingCommands = await client.application.commands.fetch();
-  existingCommands.sweep(x => x.type !== 'MESSAGE');
+  existingCommands.sweep(x => x.type !== ApplicationCommandType.Message);
 
   client.application.commands.set([]);
 
   client.on('interactionCreate', interaction => {
-    if (!interaction.isContextMenu() || interaction.targetType !== 'MESSAGE') {
+
+    if (!interaction.isMessageContextMenuCommand()) {
       return;
     }
     console.log(interaction);

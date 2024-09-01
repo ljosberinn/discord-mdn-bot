@@ -1,3 +1,4 @@
+import { ApplicationCommandOptionType, PermissionFlagsBits, PermissionsBitField } from 'discord.js';
 import type { CommandDataWithHandler } from '../../../../types';
 import { SERVER_ID } from '../../../env.js';
 import { debugOnboarding } from './onboardingBegin.js';
@@ -26,31 +27,31 @@ export const setupCommands: CommandDataWithHandler = {
     }
   },
   guildValidate: guild => guild.id === SERVER_ID,
-  defaultPermission: false,
+  defaultMemberPermissions: PermissionsBitField.Flags.Administrator,
   options: [
     {
       name: 'roles',
-      type: 'SUB_COMMAND_GROUP',
+      type: ApplicationCommandOptionType.SubcommandGroup,
       description: 'Post the role change post here',
       options: [
         {
           name: 'message',
-          type: 'SUB_COMMAND',
+          type: ApplicationCommandOptionType.Subcommand,
           description: 'Post the onboarding command here',
         },
       ],
     },
     {
       name: 'onboarding',
-      type: 'SUB_COMMAND_GROUP',
+      type: ApplicationCommandOptionType.SubcommandGroup,
       description: 'onboarding setup commands',
       options: [
         {
           name: 'message',
-          type: 'SUB_COMMAND',
+          type: ApplicationCommandOptionType.Subcommand,
           description: 'Post the onboarding command here',
         },
-        { name: 'debug', type: 'SUB_COMMAND', description: 'For now... debug info' },
+        { name: 'debug', type: ApplicationCommandOptionType.Subcommand, description: 'For now... debug info' },
       ],
     },
   ],

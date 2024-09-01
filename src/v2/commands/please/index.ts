@@ -1,5 +1,6 @@
-import type {
+import {
   ApplicationCommandOptionChoiceData,
+  ApplicationCommandOptionType,
   Client,
   CommandInteraction,
 } from 'discord.js';
@@ -21,7 +22,7 @@ const pleaseMessages = new Map<string, ValueOrNullary<string>>([
 ]);
 
 const mapTransformToChoices = map(
-  (item: string): ApplicationCommandOptionChoiceData => ({
+  (item: string): ApplicationCommandOptionChoiceData<string> => ({
     name: item,
     value: item,
   })
@@ -31,8 +32,8 @@ export const pleaseInteraction: CommandDataWithHandler = {
   name: 'please',
   description: 'Quick response for asking someone to please use something',
   handler: async (client: Client, interaction: CommandInteraction) => {
-    const content = pleaseMessages.get(interaction.options.getString('topic'));
-    const user = interaction.options.getUser('user');
+    const content = pleaseMessages.get(interaction.options.get('topic').value as string);
+    const user = interaction.options.get('user').user;
 
     if (content) {
       await interaction.reply(
@@ -46,12 +47,12 @@ export const pleaseInteraction: CommandDataWithHandler = {
       description: 'The topic to ask about',
       choices: [...mapTransformToChoices(pleaseMessages.keys())],
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
     {
       name: 'user',
       description: 'Optional Person to Tag',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
     },
   ],
 };

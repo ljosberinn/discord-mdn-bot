@@ -1,9 +1,10 @@
 // This is required so far in this file
 /* eslint-disable no-await-in-loop */
-import type {
+import {
   ApplicationCommand,
   ApplicationCommandData,
   ApplicationCommandManager,
+  ApplicationCommandType,
   Client,
   Guild,
   GuildApplicationCommandManager,
@@ -65,7 +66,7 @@ const getRelevantCmdProperties = ({
 }: {
   description: string;
   name: string;
-  options?: unknown[];
+  options?: readonly unknown[];
 }): ApplicationCommandData => {
   const relevantData = {
     description,
@@ -95,7 +96,7 @@ export const registerCommands = async (client: Client): Promise<void> => {
   client.on(
     'interactionCreate',
     asyncCatch(async interaction => {
-      if (!interaction.isCommand()) {
+      if (!interaction.isChatInputCommand()) {
         return;
       }
 
@@ -115,7 +116,6 @@ export const registerCommands = async (client: Client): Promise<void> => {
           });
         }
       } catch (error) {
-        console.error(error);
         await interaction.reply({
           ephemeral: true,
           content: 'Something went wrong when trying to execute the command',
@@ -173,7 +173,7 @@ async function addCommands(
   commandManager: ApplicationCommandManager | GuildApplicationCommandManager
 ) {
   const discordChatInputCommandsById = serverCommands.filter(
-    x => x.type === 'CHAT_INPUT'
+    x => x.type === ApplicationCommandType.ChatInput
   );
 
   const discordCommands = new Collection(

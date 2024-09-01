@@ -1,3 +1,4 @@
+import { ApplicationCommandOptionType } from 'discord.js';
 import type { CommandDataWithHandler } from '../../../../types';
 import { SERVER_ID } from '../../../env.js';
 import { handleAddRemoveRole } from '../events/handleAddRemoveRole.js';
@@ -24,30 +25,29 @@ export const roleCommands: CommandDataWithHandler = {
     client.on('interactionCreate', handleAutoCompleteRole);
   },
   guildValidate: guild => guild.id === SERVER_ID,
-  defaultPermission: false,
   options: [
     {
       name: 'suggest',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
       description: 'Suggest a role to a user',
       options: [
         {
           name: 'role',
-          type: 'STRING',
+          type: ApplicationCommandOptionType.String,
           description: 'role',
           autocomplete: true,
           required: true,
         },
         {
           name: 'user',
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           description: 'The user you want to suggested the roles to',
         },
       ],
     },
     {
       name: 'change',
-      type: 'SUB_COMMAND',
+      type: ApplicationCommandOptionType.Subcommand,
       description: 'Change your roles',
     },
   ],

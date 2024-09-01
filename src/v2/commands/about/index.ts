@@ -1,5 +1,6 @@
-import type {
+import {
   ApplicationCommandOptionChoiceData,
+  ApplicationCommandOptionType,
   Client,
   CommandInteraction,
 } from 'discord.js';
@@ -21,7 +22,7 @@ const aboutMessages = new Map<string, ValueOrNullary<string>>([
 ]);
 
 const mapTransformToChoices = map(
-  (item: string): ApplicationCommandOptionChoiceData => ({
+  (item: string): ApplicationCommandOptionChoiceData<string> => ({
     name: item,
     value: item,
   })
@@ -35,12 +36,12 @@ export const aboutInteraction: CommandDataWithHandler = {
       description: 'The topic to ask about',
       name: 'topic',
       required: true,
-      type: 'STRING',
+      type: ApplicationCommandOptionType.String,
     },
     {
       name: 'tag',
       description: 'Optional Person to Tag',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
     },
   ],
   description:
@@ -50,7 +51,7 @@ export const aboutInteraction: CommandDataWithHandler = {
     interaction: CommandInteraction
   ): Promise<void> => {
     const topic = interaction.options.get('topic').value as string;
-    const user = interaction.options.getUser('tag');
+    const user = interaction.options.get('tag').user;
     const content = aboutMessages.get(topic);
 
     if (content) {

@@ -1,5 +1,5 @@
-import { MessageActionRow, MessageSelectMenu } from 'discord.js';
-import type { Message, TextChannel } from 'discord.js';
+import { ActionRowBuilder, ChannelType, EmbedBuilder, MessageActionRowComponentBuilder, StringSelectMenuBuilder, } from 'discord.js';
+import { ComponentType, Message, TextChannel } from 'discord.js';
 import type { Client } from 'discord.js';
 
 import { POINT_LIMITER_IN_MINUTES } from '../../env.js';
@@ -41,7 +41,7 @@ const handleThanks = async (msg: Message): Promise<void> => {
   const reply = await getReply(msg);
   if (botId || (msg.mentions.users.size === 0 && !reply)) {
     if (
-      ['GUILD_PRIVATE_THREAD','GUILD_PUBLIC_THREAD'].includes(msg.channel.type)
+      [ChannelType.PrivateThread, ChannelType.PublicThread].includes(msg.channel.type)
     ) {
       await handleThreadThanks(msg);
     }
@@ -118,9 +118,8 @@ const handleThanks = async (msg: Message): Promise<void> => {
               value: `<@!${u.id}>\n${diff} minute${diff === 1 ? '' : 's'}.`,
             };
           }),
-          footerText: `You can only give a point to a user every ${POINT_LIMITER_IN_MINUTES} minute${
-            Number.parseInt(POINT_LIMITER_IN_MINUTES) === 1 ? '' : 's'
-          }.`,
+          footerText: `You can only give a point to a user every ${POINT_LIMITER_IN_MINUTES} minute${Number.parseInt(POINT_LIMITER_IN_MINUTES) === 1 ? '' : 's'
+            }.`,
           provider: 'spam',
           title: 'Cooldown alert!',
         }).embed,
@@ -149,7 +148,7 @@ const handleThanks = async (msg: Message): Promise<void> => {
 
 function attachUndoThanksListener(client: Client): void {
   client.on('interactionCreate', async interaction => {
-    if (!(interaction.isButton() || interaction.isSelectMenu())) {
+    if (!(interaction.isButton() || interaction.isStringSelectMenu())) {
       return;
     }
     const id = interaction.customId;
@@ -170,7 +169,7 @@ function attachUndoThanksListener(client: Client): void {
 
     await interaction.deferReply({ ephemeral: true });
 
-    const thanksInteraction: ThanksInteractionType =
+    const thanksInteraction =
       await ThanksInteraction.findOne({
         responseMsgId: msgId,
       });
@@ -209,23 +208,32 @@ function attachUndoThanksListener(client: Client): void {
     )) as TextChannel;
     if (thanksInteraction.thankees.length === 0) {
       textChannel.messages.delete(thanksInteraction.responseMsgId);
-      thanksInteraction.delete();
+      ThanksInteraction.deleteOne({ _id: thanksInteraction._id })
     } else {
       const oldMsg = await textChannel.messages.fetch(msgId);
-      oldMsg.embeds[0].fields = oldMsg.embeds[0].fields
-        .filter(item => !removeThankees.includes(item.value.slice(3, -1)))
-        .map((item, x) => ({ ...item, name: `${x + 1}` }));
+      const updatedEmbeds = [
+        new EmbedBuilder(
+          oldMsg.embeds[0]
+        ).setFields(
+          oldMsg.embeds[0].fields
+            .filter(item => !removeThankees.includes(item.value.slice(3, -1)))
+            .map((item, x) => ({ ...item, name: `${x + 1}` }))
+        ),
+        ...oldMsg.embeds.slice(1)
+      ]
 
-      const oldSelect = oldMsg.components[0].components[0] as MessageSelectMenu;
+
+      const oldSelect = oldMsg.components[0].components[0];
+      if (oldSelect.type !== ComponentType.StringSelect) throw new Error()
       const nuOptions = oldSelect.options
         .filter(item => !removeThankees.includes(item.value))
         .map(({ label, value }) => ({ label, value }));
 
       oldMsg.edit({
-        embeds: oldMsg.embeds,
+        embeds: updatedEmbeds,
         components: [
-          new MessageActionRow().addComponents(
-            new MessageSelectMenu(oldSelect)
+          new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+            new StringSelectMenuBuilder(oldSelect)
               .setOptions(nuOptions)
               .setMaxValues(nuOptions.length)
           ),

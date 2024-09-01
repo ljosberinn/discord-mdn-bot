@@ -1,5 +1,5 @@
-import type { CommandInteraction } from 'discord.js';
-import { MessageActionRow, MessageButton, MessageEmbed } from 'discord.js';
+import { ButtonStyle, CommandInteraction, MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from 'discord.js';
 import { chunk } from 'domyno';
 
 import { map } from '../../../utils/map.js';
@@ -9,16 +9,19 @@ import { ROLES } from '../../roles/consts/roles.js';
 
 const generateButtons = (roles: typeof ROLES | typeof NOTIFY_ROLES) =>
   roles.map(item =>
-    new MessageButton()
+    new ButtonBuilder()
       .setCustomId(`roles🤔toggle🤔${item.name}`)
       .setLabel(item.name)
-      .setStyle('SECONDARY')
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji(item.emoji)
   );
 const chunkAndRowify = pipe<
-  Iterable<MessageButton>,
-  Iterable<MessageActionRow>
->([chunk(5), map(x => new MessageActionRow().addComponents(...x))]);
+  Iterable<ButtonBuilder>,
+  Iterable<ActionRowBuilder<MessageActionRowComponentBuilder>>
+>([
+  chunk(5),
+  map((buttonBuilders: ButtonBuilder[]) => new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(...buttonBuilders))
+]);
 
 export async function setupRoles(
   interaction: CommandInteraction
@@ -29,20 +32,20 @@ export async function setupRoles(
     content:
       'You will need embeds enabled to interact with several features in this server.',
     embeds: [
-      new MessageEmbed()
+      new EmbedBuilder()
         .setTitle('Assign Yourself Roles Below')
         .setDescription(
           `Click on the reaction that corresponds with the role you're interested in.`
         )
-        .setColor('GREEN'),
-      new MessageEmbed()
-        .setColor('GREEN')
+        .setColor('Green'),
+      new EmbedBuilder()
+        .setColor('Green')
         .setTitle('⭐ IMPORTANT: Access Role-Locked Channels')
         .setDescription(
           'In order to see any general channel, you must have at least one role from the list below (excluding Community Announcement roles). If you would like access to a technology-specific channel, you must add that role to your profile. Add as many roles as you like.'
         ),
-      new MessageEmbed()
-        .setColor('YELLOW')
+      new EmbedBuilder()
+        .setColor('Yellow')
         .setDescription(
           `:warning: Note: You can add and remove roles faster using the \`/roles change\` command`
         ),
@@ -50,10 +53,10 @@ export async function setupRoles(
     components: [
       ...chunkAndRowify([
         ...generateButtons(ROLES),
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId('roles🤔toggle🤔All Development')
           .setLabel('All Channels')
-          .setStyle('SECONDARY')
+          .setStyle(ButtonStyle.Secondary)
           .setEmoji('🤓'),
       ]),
     ],

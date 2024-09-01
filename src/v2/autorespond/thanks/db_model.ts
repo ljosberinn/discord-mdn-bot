@@ -1,9 +1,7 @@
-import type { Document } from 'mongoose';
-import mongoose from 'mongoose';
+import { Schema, model } from 'mongoose';
 
-const { model, Schema } = mongoose;
 
-const schema = new Schema(
+const schema = new Schema<ThanksInteractionType>(
   {
     guild: {
       required: true,
@@ -34,7 +32,7 @@ export const ThanksInteraction = model<ThanksInteractionType>(
   'thanksMessageInteraction',
   schema
 );
-export type ThanksInteractionType = Document & {
+export type ThanksInteractionType = {
   guild: string;
   thanker: string;
   channel: string;
